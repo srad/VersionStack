@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./server
+    container_name: versionstack_backend
+    restart: always
+    environment:
+      - PORT=${PORT:-3000}
+      - JWT_SECRET=${JWT_SECRET:-change_me_in_production_please}
+      - ADMIN_USER=${ADMIN_USER:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
+    command: npm run dev
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+      - ./data:/app/data
+    networks:
+      - versionstack-net
+
+  client:
+    build: ./client
+    container_name: versionstack_client
+    restart: always
+    environment:
+      - VITE_API_URL=${VITE_API_URL:-/api}
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    networks:
+      - versionstack-net
+
+  nginx:
+    image: nginx:alpine
+    container_name: versionstack_nginx
+    restart: always
+    ports:
+      - "${HOST_PORT:-80}:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./data/files:/usr/share/nginx/html/files:ro
+    depends_on:
+      - backend
+      - client
+    networks:
+      - versionstack-net
+
+networks:
+  versionstack-net:
+    driver: bridge

@@ -1,0 +1,44 @@
+# Dependencies
+node_modules
+client/node_modules
+server/node_modules
+
+# Environment Variables
+.env
+.env.*
+
+# Build Outputs
+dist
+client/dist
+server/dist
+
+# Database & Data
+data/registry.db
+data/registry.db-journal
+data/tmp_uploads/*
+data/files/*
+!data/files/.gitkeep
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs
+*.log
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Editor/IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Docker
+.docker
