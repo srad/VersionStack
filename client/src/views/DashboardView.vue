@@ -8,7 +8,6 @@ import { Modal } from 'bootstrap'; // We need this to control the modal programm
 
 const router = useRouter();
 const apps = ref<any[]>([]);
-const showModal = ref(false);
 
 const loadApps = async () => {
   try {

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import axios from 'axios';
 import api from '../services/api';
 
 const props = defineProps<{ appKey: string }>();
@@ -71,7 +72,7 @@ const upload = async () => {
     }, 1000);
 
   } catch (err: any) {
-    if (api.isCancel(err) || err.name === 'CanceledError') {
+    if (axios.isCancel(err) || err.name === 'CanceledError') {
         // Handled in cancel function mostly, but ensure cleanup
         return;
     }

@@ -42,7 +42,7 @@ onBeforeUnmount(() => {
     window.removeEventListener('beforeunload', confirmLeave);
 });
 
-onBeforeRouteLeave((to, from, next) => {
+onBeforeRouteLeave((_to, _from, next) => {
     if (isLocked.value) {
         const answer = window.confirm('Upload in progress. Are you sure you want to leave? The upload will be cancelled.');
         if (answer) {
