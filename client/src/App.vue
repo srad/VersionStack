@@ -12,17 +12,22 @@ const showNavbar = computed(() => {
 </script>
 
 <template>
-  <div class="min-vh-100 d-flex flex-column bg-light">
+  <div class="bg-light min-vh-100 d-flex flex-column">
+    <!-- Navbar handles its own container inside -->
     <Navbar v-if="showNavbar" />
     
-    <!-- Main Content Area -->
-    <main :class="['flex-grow-1', showNavbar ? 'container py-4' : '']">
-      <router-view></router-view>
+    <!-- Main Content Area - Centered Fixed Width -->
+    <main :class="['flex-grow-1', showNavbar ? 'py-4' : '']">
+      <div :class="[showNavbar ? 'container-xxl' : '']">
+        <router-view></router-view>
+      </div>
     </main>
 
     <!-- Global Footer -->
-    <footer v-if="showNavbar" class="py-3 text-center text-muted small border-top bg-white mt-auto">
-      VersionStack Registry &copy; {{ new Date().getFullYear() }}
+    <footer v-if="showNavbar" class="py-4 text-center text-muted small mt-auto">
+      <div class="container-xxl border-top pt-3">
+        VersionStack Registry &copy; {{ new Date().getFullYear() }}
+      </div>
     </footer>
   </div>
 </template>

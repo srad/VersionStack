@@ -23,9 +23,9 @@ const login = async () => {
 </script>
 
 <template>
-  <div class="d-flex justify-content-center align-items-center vh-100 bg-light">
-    <div class="card p-4 shadow" style="max-width: 400px; width: 100%;">
-      <h3 class="text-center mb-4">VersionStack</h3>
+  <div class="d-flex justify-content-center align-items-center min-vh-100 bg-light w-100" style="position: absolute; top: 0; left: 0;">
+    <div class="card p-4 shadow-sm border-0" style="max-width: 400px; width: 100%;">
+      <h3 class="text-center mb-4 fw-light">VersionStack</h3>
       <div class="text-center mb-4 text-muted small">
         Admin Console
       </div>

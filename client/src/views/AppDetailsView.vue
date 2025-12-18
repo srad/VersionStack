@@ -217,36 +217,36 @@ onMounted(loadData);
       </div> <!-- Close card-body -->
     </div> <!-- Close card -->
 
-    <div class="card border-0 shadow-sm p-4">
-      <h3>Version History</h3>
-      <div v-if="versions.length === 0" class="text-muted">No versions uploaded yet.</div>
-      
-      <div v-else class="table-responsive">
-        <table class="table table-hover">
-          <thead>
+    <div class="card border-0 shadow-sm p-0 overflow-hidden">
+      <div class="card-header bg-white py-3 ps-4 border-bottom">
+        <h5 class="mb-0 fw-bold text-secondary">Version History</h5>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 custom-table">
+          <thead class="bg-light text-secondary">
             <tr>
-              <th>Status</th>
-              <th>Version</th>
-              <th>Created At</th>
-              <th>File Name</th>
-              <th>Size</th>
-              <th>Hash (SHA256)</th>
-              <th>Action</th>
+              <th class="ps-4 py-3 text-uppercase small fw-bold border-bottom-0">Status</th>
+              <th class="py-3 text-uppercase small fw-bold border-bottom-0">Version</th>
+              <th class="py-3 text-uppercase small fw-bold border-bottom-0">Created At</th>
+              <th class="py-3 text-uppercase small fw-bold border-bottom-0">File Name</th>
+              <th class="py-3 text-uppercase small fw-bold border-bottom-0">Size</th>
+              <th class="py-3 text-uppercase small fw-bold border-bottom-0">Hash (SHA256)</th>
+              <th class="pe-4 py-3 text-uppercase small fw-bold border-bottom-0 text-end">Action</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="v in versions" :key="v.id" :class="{'table-success': v.is_active}">
-              <td>
-                <span v-if="v.is_active" class="badge bg-success">Active</span>
-                <span v-else class="badge bg-secondary">Inactive</span>
+            <tr v-for="v in versions" :key="v.id" :class="{'bg-success-subtle': v.is_active}">
+              <td class="ps-4 py-3">
+                <span v-if="v.is_active" class="badge bg-success shadow-sm">Active</span>
+                <span v-else class="badge bg-secondary opacity-50">Inactive</span>
               </td>
-              <td><span class="badge bg-primary">{{ v.version_name }}</span></td>
-              <td>{{ formatDate(v.created_at) }}</td>
-              <td>{{ v.file_name }}</td>
-              <td>{{ formatSize(v.file_size) }}</td>
+              <td><span class="badge bg-light text-dark border">{{ v.version_name }}</span></td>
+              <td class="text-muted small">{{ formatDate(v.created_at) }}</td>
+              <td class="fw-bold text-dark">{{ v.file_name }}</td>
+              <td class="text-muted small">{{ formatSize(v.file_size) }}</td>
               <td>
                 <div class="d-flex align-items-center">
-                    <small class="text-monospace text-muted me-2" :title="v.file_hash">{{ v.file_hash.substring(0, 12) }}...</small>
+                    <small class="text-monospace text-muted me-2" :title="v.file_hash">{{ v.file_hash.substring(0, 8) }}...</small>
                     <button class="btn btn-sm btn-link p-0 text-muted" @click="copyHash(v.file_hash)" title="Copy full hash">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
                           <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
@@ -255,11 +255,17 @@ onMounted(loadData);
                     </button>
                 </div>
               </td>
-              <td>
+              <td class="pe-4 text-end">
                 <div class="btn-group">
-                    <a :href="v.download_url" class="btn btn-sm btn-outline-primary" target="_blank">Download</a>
-                    <button v-if="!v.is_active" @click="setActiveVersion(v.id)" class="btn btn-sm btn-outline-success">Set Active</button>
-                    <button v-if="!v.is_active" @click="deleteVersion(v.id)" class="btn btn-sm btn-outline-danger">Delete</button>
+                    <a :href="v.download_url" class="btn btn-sm btn-light border" target="_blank" title="Download">
+                        ⬇
+                    </a>
+                    <button v-if="!v.is_active" @click="setActiveVersion(v.id)" class="btn btn-sm btn-light border text-success" title="Set Active">
+                        ✓
+                    </button>
+                    <button v-if="!v.is_active" @click="deleteVersion(v.id)" class="btn btn-sm btn-light border text-danger" title="Delete">
+                        ✕
+                    </button>
                 </div>
               </td>
             </tr>

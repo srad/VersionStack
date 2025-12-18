@@ -9,28 +9,40 @@ const router = useRouter();
 </script>
 
 <template>
-  <div class="table-responsive">
-    <table class="table table-hover align-middle">
-      <thead class="table-light">
-        <tr>
-          <th>Application Name</th>
-          <th>App Key (ID)</th>
-          <th class="text-end">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="app in apps" :key="app.id" @click="router.push(`/apps/${app.app_key}`)" style="cursor: pointer;">
-          <td class="fw-bold">{{ app.display_name }}</td>
-          <td><span class="font-monospace text-muted">{{ app.app_key }}</span></td>
-          <td class="text-end">
-            <button class="btn btn-sm btn-outline-primary">View Details &rarr;</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+  <div class="card border-0 shadow-sm p-0 overflow-hidden">
+    <div class="card-header bg-white py-3 ps-4 border-bottom">
+      <h5 class="mb-0 fw-bold text-secondary">App List</h5>
+    </div>
+    <div class="table-responsive rounded shadow-sm border bg-white">
+      <table class="table table-hover align-middle mb-0 custom-table">
+        <thead class="bg-light text-secondary">
+          <tr>
+            <th class="ps-4 py-3 text-uppercase small fw-bold border-bottom-0">Application Name</th>
+            <th class="py-3 text-uppercase small fw-bold border-bottom-0">App Key (ID)</th>
+            <th class="pe-4 py-3 text-uppercase small fw-bold border-bottom-0 text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="border-top-0">
+          <tr v-for="app in apps" :key="app.id" @click="router.push(`/apps/${app.app_key}`)" style="cursor: pointer;">
+            <td class="ps-4 py-3 fw-bold text-dark">{{ app.display_name }}</td>
+            <td class="py-3"><span class="badge bg-light text-secondary font-monospace border">{{ app.app_key }}</span>
+            </td>
+            <td class="pe-4 py-3 text-end">
+              <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-bold">View Details</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </template>
 
 <style scoped>
-/* No specific styles needed as we use Bootstrap classes */
+.custom-table thead th {
+  letter-spacing: 0.05em;
+}
+
+.custom-table tbody tr:last-child td {
+  border-bottom: 0;
+}
 </style>

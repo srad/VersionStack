@@ -77,17 +77,17 @@ onMounted(() => {
       </div>
 
       <!-- Apps List -->
-      <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white py-3">
-          <h5 class="mb-0">Application List</h5>
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold text-secondary mb-0">Applications</h5>
+        <div class="text-muted small">Showing {{ apps.length }} apps</div>
+      </div>
+
+      <div class="bg-white rounded shadow-sm border">
+        <div v-if="apps.length === 0" class="text-center py-5">
+            <p class="text-muted mb-3">No applications found in the registry.</p>
+            <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#createAppModal">Create your first App</button>
         </div>
-        <div class="card-body">
-            <div v-if="apps.length === 0" class="text-center py-5">
-                <p class="text-muted mb-3">No applications found in the registry.</p>
-                <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#createAppModal">Create your first App</button>
-            </div>
-            <AppList v-else :apps="apps" />
-        </div>
+        <AppList v-else :apps="apps" />
       </div>
 
     <!-- Create App Modal -->
