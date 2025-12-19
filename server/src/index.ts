@@ -12,13 +12,19 @@ import versionRoutes from './routes/versions';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy (required when behind Traefik/nginx)
+app.set('trust proxy', 1);
+
 // Security Middleware
 // Helmet removed to debug CSP issues
 app.use((req, res, next) => {
   res.removeHeader('Content-Security-Policy');
   next();
 });
-app.use(cors());
+app.use(cors({
+  origin: true, // Allow all origins (or specify: ['https://versionstack.sedrad.com'])
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.static(path.join(process.cwd(), 'public')));
 
@@ -53,9 +59,14 @@ dataDirs.forEach(dir => {
 const startServer = async () => {
   try {
     await initDb();
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
+
+    // Increase timeouts for large file uploads (1 hour)
+    server.timeout = 3600000;
+    server.keepAliveTimeout = 3600000;
+    server.headersTimeout = 3600000;
   } catch (error) {
     console.error('Failed to start server:', error);
   }

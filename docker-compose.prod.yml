@@ -31,6 +31,12 @@ services:
       - backend
     networks:
       - versionstack-net
+    labels:
+      # Traefik large file upload configuration
+      - "traefik.http.middlewares.versionstack-buffering.buffering.maxRequestBodyBytes=0"
+      - "traefik.http.middlewares.versionstack-buffering.buffering.memRequestBodyBytes=2097152"
+      - "traefik.http.middlewares.versionstack-buffering.buffering.maxResponseBodyBytes=0"
+      - "traefik.http.routers.versionstack.middlewares=versionstack-buffering"
 
 networks:
   versionstack-net:
