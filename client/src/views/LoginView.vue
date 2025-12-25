@@ -1,23 +1,21 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import api from '../services/api';
 import { useRouter } from 'vue-router';
+import { authApi, getErrorMessage } from '../api';
 
 const router = useRouter();
-const username = ref('');
-const password = ref('');
+const apiKey = ref('');
 const errorMsg = ref('');
 
 const login = async () => {
   try {
-    const res = await api.post('/auth/login', {
-      username: username.value,
-      password: password.value
+    const response = await authApi().authLoginPost({
+      apiKey: apiKey.value
     });
-    localStorage.setItem('token', res.data.token);
+    localStorage.setItem('token', response.data.token);
     router.push('/dashboard');
-  } catch (err: any) {
-    errorMsg.value = err.response?.data?.message || 'Login failed';
+  } catch (err: unknown) {
+    errorMsg.value = getErrorMessage(err);
   }
 };
 </script>
@@ -29,15 +27,17 @@ const login = async () => {
       <div class="text-center mb-4 text-muted small">
         Admin Console
       </div>
-      
+
       <div class="mb-3">
-        <label>Username</label>
-        <input v-model="username" type="text" class="form-control" @keyup.enter="login" />
-      </div>
-      
-      <div class="mb-3">
-        <label>Password</label>
-        <input v-model="password" type="password" class="form-control" @keyup.enter="login" />
+        <label>API Key</label>
+        <input
+          v-model="apiKey"
+          type="password"
+          class="form-control"
+          placeholder="Enter your API key"
+          @keyup.enter="login"
+        />
+        <div class="form-text">Contact your administrator to obtain an API key.</div>
       </div>
 
       <div class="d-grid gap-2">

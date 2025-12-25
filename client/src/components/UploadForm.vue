@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import axios from 'axios';
-import api from '../services/api';
+import { axiosInstance, getErrorMessage, type UploadVersionResponse } from '../api';
 
 const props = defineProps<{ appKey: string }>();
 const emit = defineEmits(['upload-start', 'upload-end', 'upload-progress']);
@@ -26,44 +26,52 @@ const cancel = () => {
 defineExpose({ cancel });
 
 const upload = async () => {
-  const file = fileInput.value?.files?.[0];
-  if (!file) return alert('Please select a file');
+  const files = fileInput.value?.files;
+  if (!files || files.length === 0) return alert('Please select at least one file');
 
   const formData = new FormData();
-  formData.append('file', file);
+  for (let i = 0; i < files.length; i++) {
+    formData.append('files', files[i]);
+  }
   if (versionName.value) {
-    formData.append('version_name', versionName.value);
+    formData.append('versionName', versionName.value);
   }
 
+  const fileCount = files.length;
   isUploading.value = true;
   progress.value = 0;
-  statusMsg.value = 'Starting upload...';
+  statusMsg.value = `Starting upload of ${fileCount} file${fileCount > 1 ? 's' : ''}...`;
   emit('upload-start');
 
   abortController = new AbortController();
 
   try {
-    const res = await api.post(`/apps/${props.appKey}/versions`, formData, {
-      signal: abortController.signal,
-      onUploadProgress: (progressEvent) => {
-        if (progressEvent.total) {
-          const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-          progress.value = percent;
-          emit('upload-progress', percent);
-          
-          if (percent < 100) {
-            statusMsg.value = `Uploading: ${percent}%`;
-          } else {
-            statusMsg.value = 'Processing on server... (Calculating Hash)';
+    const res = await axiosInstance.post<UploadVersionResponse>(
+      `/api/v1/apps/${props.appKey}/versions`,
+      formData,
+      {
+        signal: abortController.signal,
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            progress.value = percent;
+            emit('upload-progress', percent);
+
+            if (percent < 100) {
+              statusMsg.value = `Uploading ${fileCount} file${fileCount > 1 ? 's' : ''}: ${percent}%`;
+            } else {
+              statusMsg.value = 'Processing on server... (Calculating Hashes)';
+            }
           }
         }
       }
-    });
+    );
 
-    statusMsg.value = `Success! Version: ${res.data.version}`;
+    const uploadedCount = res.data.files?.length || 1;
+    statusMsg.value = `Success! Version: ${res.data.version} (${uploadedCount} file${uploadedCount > 1 ? 's' : ''})`;
     if (fileInput.value) fileInput.value.value = '';
     versionName.value = '';
-    
+
     // Slight delay to show success before unlocking
     setTimeout(() => {
         isUploading.value = false;
@@ -71,12 +79,12 @@ const upload = async () => {
         emit('upload-end', true); // true = success
     }, 1000);
 
-  } catch (err: any) {
-    if (axios.isCancel(err) || err.name === 'CanceledError') {
+  } catch (err: unknown) {
+    if (axios.isCancel(err) || (err instanceof Error && err.name === 'CanceledError')) {
         // Handled in cancel function mostly, but ensure cleanup
         return;
     }
-    statusMsg.value = `Error: ${err.response?.data?.message || err.message}`;
+    statusMsg.value = `Error: ${getErrorMessage(err)}`;
     isUploading.value = false;
     emit('upload-end', false); // false = failure
   } finally {
@@ -89,7 +97,7 @@ const upload = async () => {
   <div>
     <div class="d-flex gap-2">
       <input v-model="versionName" type="text" class="form-control w-25" placeholder="1.0.0 (Optional)" />
-      <input ref="fileInput" type="file" class="form-control" />
+      <input ref="fileInput" type="file" class="form-control" multiple />
       <button @click="upload" class="btn btn-primary" :disabled="isUploading">
         Upload
       </button>

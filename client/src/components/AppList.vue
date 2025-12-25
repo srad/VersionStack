@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
+import type { App } from '../api';
 
 defineProps<{
-  apps: any[]
+  apps: App[]
 }>();
 
 const router = useRouter();
@@ -23,9 +24,12 @@ const router = useRouter();
           </tr>
         </thead>
         <tbody class="border-top-0">
-          <tr v-for="app in apps" :key="app.id" @click="router.push(`/apps/${app.app_key}`)" style="cursor: pointer;">
-            <td class="ps-4 py-3 fw-bold text-dark">{{ app.display_name }}</td>
-            <td class="py-3"><span class="badge bg-light text-secondary font-monospace border">{{ app.app_key }}</span>
+          <tr v-for="app in apps" :key="app.id" @click="router.push(`/apps/${app.appKey}`)" style="cursor: pointer;">
+            <td class="ps-4 py-3 fw-bold text-dark">
+              {{ app.displayName }}
+              <span v-if="app.isPublic" class="badge bg-success-subtle text-success ms-2 small">Public</span>
+            </td>
+            <td class="py-3"><span class="badge bg-light text-secondary font-monospace border">{{ app.appKey }}</span>
             </td>
             <td class="pe-4 py-3 text-end">
               <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-bold">View Details</button>
