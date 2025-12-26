@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import { Database } from 'sqlite';
 import { DATABASE_TOKEN } from '../repositories/base.repository';
 import { BaseController } from './base.controller';
+import { getAppVersion } from '../utils/version';
 
 interface HealthStatus {
   status: 'healthy' | 'degraded' | 'unhealthy';
@@ -29,7 +30,7 @@ export class HealthController extends BaseController {
       status: 'healthy',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
-      version: process.env.npm_package_version || '1.0.0',
+      version: getAppVersion(),
       checks: {
         database: {
           status: 'up',

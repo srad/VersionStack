@@ -1,6 +1,7 @@
 import express from 'express';
 import { getDb } from '../db';
 import { Errors } from '../utils/responses';
+import { getAppVersion } from '../utils/version';
 
 const router = express.Router();
 
@@ -25,7 +26,7 @@ router.get('/', async (_req, res) => {
     status: 'healthy',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    version: process.env.npm_package_version || '1.0.0',
+    version: getAppVersion(),
     checks: {
       database: {
         status: 'up',
