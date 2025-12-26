@@ -55,14 +55,22 @@ export function createMigrator(db: Database) {
     fs.mkdirSync(migrationsPath, { recursive: true });
   }
 
+  // Detect if running compiled JS or TypeScript source
+  // In production (compiled), __filename ends with .js
+  const isCompiled = __filename.endsWith('.js');
+  const globPattern = isCompiled ? '*.js' : '*.ts';
+
   return new Umzug({
     migrations: {
-      glob: ['*.ts', { cwd: migrationsPath }],
+      glob: [globPattern, { cwd: migrationsPath }],
       resolve: ({ name, path: migrationPath }: { name: string; path?: string }): RunnableMigration<MigrationContext> => {
+        // Normalize name to .ts extension for consistent tracking in migrations table
+        // Prevents same migration being recorded as both .ts and .js
+        const normalizedName = name.replace(/\.js$/, '.ts');
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         const migration = require(migrationPath!);
         return {
-          name,
+          name: normalizedName,
           up: async () => migration.up({ db }),
           down: async () => migration.down?.({ db }),
         };
