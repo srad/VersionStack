@@ -260,6 +260,28 @@ export interface SetActiveVersionRequest {
      */
     'versionId': number;
 }
+export interface Stats {
+    /**
+     * Total number of registered applications
+     */
+    'totalApps': number;
+    /**
+     * Total number of versions across all applications
+     */
+    'totalVersions': number;
+    /**
+     * Total storage used by all files in bytes
+     */
+    'totalStorageBytes': number;
+    /**
+     * Number of applications that have an active version set
+     */
+    'appsWithActiveVersion': number;
+    /**
+     * Number of version uploads in the last 7 days
+     */
+    'recentUploads': number;
+}
 export interface UpdateAppRequest {
     'displayName'?: string;
     /**
@@ -1376,6 +1398,104 @@ export class HealthApi extends BaseAPI {
      */
     public healthReadyGet(options?: RawAxiosRequestConfig) {
         return HealthApiFp(this.configuration).healthReadyGet(options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+
+/**
+ * StatsApi - axios parameter creator
+ */
+export const StatsApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * Retrieve aggregated statistics for the dashboard including total apps, versions, storage usage, and recent activity.
+         * @summary Get dashboard statistics
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        statsGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/stats`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+            localVarHeaderParameter['Accept'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * StatsApi - functional programming interface
+ */
+export const StatsApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = StatsApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * Retrieve aggregated statistics for the dashboard including total apps, versions, storage usage, and recent activity.
+         * @summary Get dashboard statistics
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async statsGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Stats>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.statsGet(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['StatsApi.statsGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * StatsApi - factory interface
+ */
+export const StatsApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = StatsApiFp(configuration)
+    return {
+        /**
+         * Retrieve aggregated statistics for the dashboard including total apps, versions, storage usage, and recent activity.
+         * @summary Get dashboard statistics
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        statsGet(options?: RawAxiosRequestConfig): AxiosPromise<Stats> {
+            return localVarFp.statsGet(options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * StatsApi - object-oriented interface
+ */
+export class StatsApi extends BaseAPI {
+    /**
+     * Retrieve aggregated statistics for the dashboard including total apps, versions, storage usage, and recent activity.
+     * @summary Get dashboard statistics
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public statsGet(options?: RawAxiosRequestConfig) {
+        return StatsApiFp(this.configuration).statsGet(options).then((request) => request(this.axios, this.basePath));
     }
 }
 

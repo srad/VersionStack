@@ -342,3 +342,30 @@ export const AuditLogResponseSchema = registry.register(
     pagination: AuditLogPaginationSchema,
   })
 );
+
+// ============ Stats Schemas ============
+export const StatsSchema = registry.register(
+  'Stats',
+  z.object({
+    totalApps: z.number().openapi({
+      example: 5,
+      description: 'Total number of registered applications',
+    }),
+    totalVersions: z.number().openapi({
+      example: 42,
+      description: 'Total number of versions across all applications',
+    }),
+    totalStorageBytes: z.number().openapi({
+      example: 1073741824,
+      description: 'Total storage used by all files in bytes',
+    }),
+    appsWithActiveVersion: z.number().openapi({
+      example: 4,
+      description: 'Number of applications that have an active version set',
+    }),
+    recentUploads: z.number().openapi({
+      example: 8,
+      description: 'Number of version uploads in the last 7 days',
+    }),
+  })
+);

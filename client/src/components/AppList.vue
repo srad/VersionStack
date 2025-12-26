@@ -12,7 +12,7 @@ const router = useRouter();
 <template>
   <div class="card border-0 shadow-sm p-0 overflow-hidden">
     <div class="card-header bg-white py-3 ps-4 border-bottom">
-      <h5 class="mb-0 fw-bold text-secondary">App List</h5>
+      <h5 class="mb-0 fw-bold text-secondary">Applications</h5>
     </div>
     <div class="table-responsive rounded shadow-sm border bg-white">
       <table class="table table-hover align-middle mb-0 custom-table">

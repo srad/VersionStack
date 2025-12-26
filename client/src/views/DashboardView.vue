@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { appsApi, type App } from '../api';
+import { appsApi, statsApi, type App, type Stats } from '../api';
 import CreateAppForm from '../components/CreateAppForm.vue';
 import AppList from '../components/AppList.vue';
 import { Modal } from 'bootstrap';
 
 const router = useRouter();
 const apps = ref<App[]>([]);
+const stats = ref<Stats | null>(null);
 
 const loadApps = async () => {
   try {
@@ -18,8 +19,18 @@ const loadApps = async () => {
   }
 };
 
+const loadStats = async () => {
+  try {
+    const response = await statsApi().statsGet();
+    stats.value = response.data;
+  } catch (err) {
+    console.error('Failed to load stats');
+  }
+};
+
 const handleAppCreated = () => {
   loadApps();
+  loadStats();
   // Close modal logic (using data-bs-dismiss in the child or standard bootstrap behavior)
   const modalEl = document.getElementById('createAppModal');
   const modal = Modal.getInstance(modalEl!) || new Modal(modalEl!);
@@ -28,22 +39,31 @@ const handleAppCreated = () => {
 
 const totalApps = computed(() => apps.value.length);
 
+const formatBytes = (bytes: number): string => {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+};
+
 onMounted(() => {
   if (!localStorage.getItem('token')) {
     router.push('/');
     return;
   }
   loadApps();
+  loadStats();
 });
 </script>
 
 <template>
   <div>
     <!-- Header / Stats -->
-    <div class="row mb-4">
+    <div class="row mb-3">
         <div class="col-md-8">
           <h2 class="fw-light">Dashboard</h2>
-          <p class="text-muted">Manage your application registry and versions.</p>
+          <!--<p class="text-muted">Manage your application registry and versions.</p>-->
         </div>
         <div class="col-md-4 text-end">
              <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#createAppModal">
@@ -53,37 +73,43 @@ onMounted(() => {
       </div>
 
       <!-- Stats Cards -->
-      <div class="row mb-5">
-        <div class="col-md-4">
+      <div class="row mb-4">
+        <div class="col-md-3">
           <div class="card border-0 shadow-sm">
             <div class="card-body">
               <h6 class="text-uppercase text-muted small">Total Applications</h6>
-              <h2 class="fw-bold mb-0">{{ totalApps }}</h2>
+              <h2 class="fw-bold mb-0">{{ stats?.totalApps ?? totalApps }}</h2>
             </div>
           </div>
         </div>
-        <div class="col-md-4">
-           <!-- Placeholder for future stats -->
-           <div class="card border-0 shadow-sm">
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm">
             <div class="card-body">
-              <h6 class="text-uppercase text-muted small">System Status</h6>
-              <div class="d-flex align-items-center">
-                <span class="badge bg-success me-2">Online</span>
-                <span class="text-muted small">v1.0.0</span>
-              </div>
+              <h6 class="text-uppercase text-muted small">Total Versions</h6>
+              <h2 class="fw-bold mb-0">{{ stats?.totalVersions ?? '-' }}</h2>
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- Apps List -->
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="fw-bold text-secondary mb-0">Applications</h5>
-        <div class="text-muted small">Showing {{ apps.length }} apps</div>
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm">
+            <div class="card-body">
+              <h6 class="text-uppercase text-muted small">Storage Used</h6>
+              <h2 class="fw-bold mb-0">{{ stats ? formatBytes(stats.totalStorageBytes) : '-' }}</h2>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm">
+            <div class="card-body">
+              <h6 class="text-uppercase text-muted small">Uploads (7 days)</h6>
+              <h2 class="fw-bold mb-0">{{ stats?.recentUploads ?? '-' }}</h2>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="bg-white rounded shadow-sm border">
-        <div v-if="apps.length === 0" class="text-center py-5">
+        <div v-if="apps.length === 0" class="text-center py-3">
             <p class="text-muted mb-3">No applications found in the registry.</p>
             <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#createAppModal">Create your first App</button>
         </div>
@@ -91,7 +117,7 @@ onMounted(() => {
       </div>
 
       <!-- Admin Navigation -->
-      <div class="row mt-5">
+      <div class="row mt-4">
         <div class="col-md-6 mb-3">
           <div
             class="card border-0 shadow-sm h-100 admin-nav-card"

@@ -1,3 +1,6 @@
+// reflect-metadata must be imported first for TSyringe
+import 'reflect-metadata';
+
 import express from 'express';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
@@ -5,9 +8,11 @@ import path from 'path';
 import fs from 'fs';
 import swaggerUi from 'swagger-ui-express';
 import { initDb } from './db';
+import { initializeContainer } from './container';
+import { createV1Router } from './routes/v1';
 import { swaggerSpec } from './swagger';
 
-import v1Routes from './routes/v1';
+// Legacy routes for backwards compatibility
 import authRoutes from './routes/auth';
 import appRoutes from './routes/apps';
 import versionRoutes from './routes/versions';
@@ -51,9 +56,6 @@ app.get('/api/openapi.json', (_req, res) => {
   res.json(swaggerSpec);
 });
 
-// Versioned API Routes (current)
-app.use('/api/v1', v1Routes);
-
 // Legacy routes (deprecated) - maintain backward compatibility
 const deprecationWarning = (req: express.Request, res: express.Response, next: express.NextFunction) => {
   res.setHeader('Deprecation', 'true');
@@ -83,7 +85,16 @@ dataDirs.forEach(dir => {
 // Start Server
 const startServer = async () => {
   try {
+    // Initialize database first
     await initDb();
+
+    // Initialize DI container after database is ready
+    initializeContainer();
+
+    // Create and mount the V1 router (uses DI controllers)
+    const v1Router = createV1Router();
+    app.use('/api/v1', v1Router);
+
     const server = app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });

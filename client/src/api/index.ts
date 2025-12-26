@@ -5,6 +5,7 @@ import {
   AuthenticationApi,
   VersionsApi,
   HealthApi,
+  StatsApi,
 } from './generated';
 
 // Re-export types from generated API
@@ -22,6 +23,7 @@ export type {
   LatestVersion,
   MessageResponse,
   ModelError,
+  Stats,
 } from './generated';
 
 // Create axios instance with interceptors
@@ -63,6 +65,7 @@ let _appsApi: AppsApi | null = null;
 let _authApi: AuthenticationApi | null = null;
 let _versionsApi: VersionsApi | null = null;
 let _healthApi: HealthApi | null = null;
+let _statsApi: StatsApi | null = null;
 
 export const appsApi = (): AppsApi => {
   if (!_appsApi) {
@@ -90,6 +93,13 @@ export const healthApi = (): HealthApi => {
     _healthApi = new HealthApi(createConfiguration(), undefined, axiosInstance);
   }
   return _healthApi;
+};
+
+export const statsApi = (): StatsApi => {
+  if (!_statsApi) {
+    _statsApi = new StatsApi(createConfiguration(), undefined, axiosInstance);
+  }
+  return _statsApi;
 };
 
 // Helper to get error message from API errors

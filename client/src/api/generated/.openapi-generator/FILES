@@ -32,6 +32,8 @@ docs/LoginResponse.md
 docs/MessageResponse.md
 docs/Readiness.md
 docs/SetActiveVersionRequest.md
+docs/Stats.md
+docs/StatsApi.md
 docs/UpdateAppRequest.md
 docs/UploadVersionResponse.md
 docs/Version.md

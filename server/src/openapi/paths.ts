@@ -23,6 +23,7 @@ import {
   ReadinessSchema,
   MessageResponseSchema,
   AuditLogResponseSchema,
+  StatsSchema,
 } from './schemas';
 
 // ============ Auth Routes ============
@@ -529,6 +530,26 @@ registry.registerPath({
     },
     403: {
       description: 'Admin permission required',
+      content: { 'application/json': { schema: ErrorSchema } },
+    },
+  },
+});
+
+// ============ Stats Routes ============
+registry.registerPath({
+  method: 'get',
+  path: '/stats',
+  tags: ['Stats'],
+  summary: 'Get dashboard statistics',
+  description: 'Retrieve aggregated statistics for the dashboard including total apps, versions, storage usage, and recent activity.',
+  security: [{ bearerAuth: [] }],
+  responses: {
+    200: {
+      description: 'Dashboard statistics',
+      content: { 'application/json': { schema: StatsSchema } },
+    },
+    401: {
+      description: 'Unauthorized',
       content: { 'application/json': { schema: ErrorSchema } },
     },
   },

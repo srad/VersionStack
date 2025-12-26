@@ -9,27 +9,48 @@ VersionStack/
 ├── server/                 # Node.js/Express backend
 │   ├── src/
 │   │   ├── index.ts       # Server entry point
-│   │   ├── db.ts          # Database exports (backwards compat)
+│   │   ├── container.ts   # TSyringe DI container setup
 │   │   ├── db/            # Database module
 │   │   │   ├── index.ts   # Database initialization
 │   │   │   ├── migrator.ts # Umzug migration runner
 │   │   │   ├── cli.ts     # Migration CLI
 │   │   │   └── migrations/ # Migration files
+│   │   ├── controllers/   # HTTP request handlers (thin layer)
+│   │   │   ├── base.controller.ts
+│   │   │   ├── apps.controller.ts
+│   │   │   ├── versions.controller.ts
+│   │   │   ├── auth.controller.ts
+│   │   │   ├── audit.controller.ts
+│   │   │   └── health.controller.ts
+│   │   ├── services/      # Business logic layer
+│   │   │   ├── apps.service.ts
+│   │   │   ├── versions.service.ts
+│   │   │   ├── auth.service.ts
+│   │   │   └── audit.service.ts
+│   │   ├── repositories/  # Data access layer
+│   │   │   ├── base.repository.ts  # Transaction support
+│   │   │   ├── apps.repository.ts
+│   │   │   ├── versions.repository.ts
+│   │   │   ├── api-keys.repository.ts
+│   │   │   └── audit.repository.ts
+│   │   ├── storage/       # File storage abstraction
+│   │   │   └── file-storage.ts
+│   │   ├── errors/        # Custom error classes
+│   │   │   └── index.ts
 │   │   ├── types/         # TypeScript interfaces
 │   │   ├── middleware/    # Express middleware (auth, validation)
-│   │   ├── routes/        # API route handlers
-│   │   │   ├── v1/        # Versioned API router
-│   │   │   ├── apps.ts    # App CRUD operations
-│   │   │   ├── versions.ts # Version/file upload operations
-│   │   │   ├── auth.ts    # Authentication & API key management
-│   │   │   ├── audit.ts   # Audit log endpoint
-│   │   │   └── health.ts  # Health check endpoints
+│   │   ├── routes/        # Route definitions (wires controllers)
+│   │   │   ├── v1/index.ts # V1 API routes using controllers
+│   │   │   ├── apps.ts    # Legacy routes (deprecated)
+│   │   │   ├── versions.ts
+│   │   │   ├── auth.ts
+│   │   │   ├── audit.ts
+│   │   │   └── health.ts
 │   │   ├── openapi/       # OpenAPI documentation
-│   │   │   ├── index.ts   # OpenAPI generator
-│   │   │   ├── registry.ts # OpenAPI registry
-│   │   │   ├── schemas.ts # Zod schemas with OpenAPI extensions
-│   │   │   └── paths.ts   # API path definitions
 │   │   └── utils/         # Utility functions (responses, audit)
+│   ├── tests/             # Unit tests (Vitest)
+│   │   ├── setup.ts
+│   │   └── services/
 │   ├── data/              # Runtime data (SQLite DB, uploaded files)
 │   └── Dockerfile
 ├── client/                 # Vue 3 frontend
@@ -52,10 +73,12 @@ VersionStack/
 - **Runtime**: Node.js with TypeScript
 - **Framework**: Express.js
 - **Database**: SQLite (via `sqlite3` + `sqlite`)
+- **Dependency Injection**: TSyringe (decorator-based DI)
 - **Validation**: Zod
 - **API Documentation**: OpenAPI 3.0 via `@asteasolutions/zod-to-openapi`
 - **Authentication**: JWT (jsonwebtoken)
 - **File Upload**: Multer
+- **Testing**: Vitest
 
 ### Frontend
 - **Framework**: Vue 3 with Composition API
@@ -66,6 +89,68 @@ VersionStack/
 ### Infrastructure
 - **Containerization**: Docker + Docker Compose
 - **Reverse Proxy**: Nginx (serves static files, proxies API)
+
+## Backend Architecture
+
+The server uses a 4-layer architecture with clear separation of concerns:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    HTTP Layer (Express)                      │
+├─────────────────────────────────────────────────────────────┤
+│  Controllers (thin)                                          │
+│  - Parse request, call service, return response              │
+│  - Error handling via BaseController                         │
+├─────────────────────────────────────────────────────────────┤
+│  Services (business logic)                                   │
+│  - Orchestrate operations                                    │
+│  - Transaction boundaries                                    │
+│  - Coordinate repositories + file storage                    │
+├─────────────────────────────────────────────────────────────┤
+│  Repositories (data access)     │  FileStorage (abstraction) │
+│  - SQL queries                  │  - Save/delete files        │
+│  - Type-safe returns            │  - Hash calculation         │
+│  - Transaction support          │  - Directory management     │
+├─────────────────────────────────────────────────────────────┤
+│                    Database (SQLite)                         │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Layer Responsibilities
+
+- **Controllers**: HTTP-only concerns. Parse requests, delegate to services, format responses. All controllers extend `BaseController` for consistent error handling.
+- **Services**: Business logic and orchestration. Define transaction boundaries, coordinate between repositories and file storage.
+- **Repositories**: Data access layer. Execute SQL queries with type-safe returns. Extend `BaseRepository` for transaction support.
+- **FileStorage**: Abstraction for file operations (save, delete, hash calculation).
+
+### Dependency Injection
+
+TSyringe provides decorator-based DI:
+
+```typescript
+// Services and repositories use @injectable() decorator
+@injectable()
+export class AppsService {
+  constructor(
+    private appsRepo: AppsRepository,
+    private versionsRepo: VersionsRepository,
+    private fileStorage: FileStorage
+  ) {}
+}
+
+// Container resolves dependencies automatically
+const appsController = container.resolve(AppsController);
+```
+
+### Custom Errors
+
+Custom error classes in `errors/index.ts` provide consistent error responses:
+
+```typescript
+throw new AppNotFoundError(appKey);     // 404 APP_NOT_FOUND
+throw new AlreadyExistsError('App');    // 409 ALREADY_EXISTS
+throw new ValidationError('Invalid');   // 400 VALIDATION_ERROR
+```
 
 ## API Documentation
 
@@ -124,6 +209,7 @@ All API endpoints are versioned under `/api/v1/`. Legacy unversioned endpoints (
 
 ### Authentication
 - `POST /api/v1/auth/login` - Authenticate with API key, get JWT token
+- `GET /api/v1/auth/file-access` - Internal endpoint for Nginx auth_request (validates file download permissions)
 
 ### API Keys (admin only)
 - `GET /api/v1/auth/api-keys` - List all API keys
@@ -269,6 +355,62 @@ docker-compose down -v
 docker-compose up --build
 ```
 
+## Testing
+
+Unit tests use Vitest with mocked dependencies. Tests are located in `server/tests/`.
+
+### Test Commands
+```bash
+cd server
+
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage report
+npm run test:coverage
+```
+
+### Test Structure
+```
+server/tests/
+├── setup.ts              # Test setup, mock utilities
+├── services/             # Service unit tests
+│   └── apps.service.test.ts
+└── repositories/         # Repository unit tests (planned)
+```
+
+### Writing Tests
+
+Services are tested by mocking their dependencies:
+
+```typescript
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { AppsService } from '../../src/services/apps.service';
+
+describe('AppsService', () => {
+  let service: AppsService;
+  let mockAppsRepo: any;
+
+  beforeEach(() => {
+    mockAppsRepo = {
+      findByKey: vi.fn(),
+      delete: vi.fn(),
+      withTransaction: vi.fn((fn) => fn()),
+    };
+    service = new AppsService(mockAppsRepo, mockVersionsRepo, mockFileStorage);
+  });
+
+  it('should delete app', async () => {
+    mockAppsRepo.findByKey.mockResolvedValue({ id: 1 });
+    await service.deleteApp('test-app', {} as any);
+    expect(mockAppsRepo.delete).toHaveBeenCalledWith(1);
+  });
+});
+```
+
 ## Database Migrations
 
 Migrations are managed with **umzug** and stored in `server/src/db/migrations/`.
@@ -332,7 +474,18 @@ Uploaded files are stored at:
 data/files/{appKey}/{versionName}/{fileName}
 ```
 
-Files are served directly by Nginx at `/files/...` for efficient static file delivery.
+Files are served by Nginx at `/files/...` with authentication protection via `auth_request`.
+
+### File Access Control
+
+File downloads respect app visibility settings:
+- **Public apps**: Files accessible without authentication
+- **Private apps**: Files require valid JWT token with app access
+
+Nginx uses `auth_request` to call `/api/v1/auth/file-access` before serving files. This endpoint validates:
+1. The app exists
+2. If public, allows access immediately
+3. If private, verifies the JWT token and checks app scope permissions
 
 ## Security Features
 
@@ -343,6 +496,7 @@ Files are served directly by Nginx at `/files/...` for efficient static file del
   - `admin`: Full access + API key management + audit log
 - **App Scoping**: API keys can be limited to specific apps
 - **Public/Private Apps**: Apps can be marked public (unauthenticated /latest access) or private
+- **File Download Protection**: Nginx `auth_request` validates permissions before serving files from private apps
 - **Audit Logging**: All actions are logged with actor, IP, timestamp, and details:
   - `auth.login`, `auth.login_failed`
   - `api_key.create`, `api_key.revoke`

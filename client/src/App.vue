@@ -17,7 +17,7 @@ const showNavbar = computed(() => {
     <Navbar v-if="showNavbar" />
     
     <!-- Main Content Area - Centered Fixed Width -->
-    <main :class="['flex-grow-1', showNavbar ? 'py-4' : '']">
+    <main :class="['flex-grow-1', showNavbar ? 'py-1' : '']">
       <div :class="[showNavbar ? 'container-xxl' : '']">
         <router-view></router-view>
       </div>
